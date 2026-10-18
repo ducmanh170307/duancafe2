@@ -1,0 +1,16 @@
+const r=require('express').Router();
+const c=require('../controllers/inventory.controller');
+const {authenticate,allow,ROLES}=require('../middleware/auth');
+r.use('/inventory',authenticate,allow(ROLES.ADMIN,ROLES.MANAGER));
+r.get('/inventory',c.list);
+r.get('/inventory/history',c.history);
+r.post('/inventory/ingredients',allow(ROLES.ADMIN),c.createIngredient);
+r.post('/inventory/suppliers',allow(ROLES.ADMIN),c.createSupplier);
+r.post('/inventory/receipts',c.createReceipt);
+r.post('/inventory/receipts/:id/submit',c.submitReceipt);
+r.post('/inventory/receipts/:id/confirm',c.confirmReceipt);
+r.post('/inventory/count',c.adjust);
+r.get('/inventory/transfers',c.transfers);
+r.post('/inventory/transfers',c.transfer);
+r.post('/inventory/transfers/:id/receive',c.receiveTransfer);
+module.exports=r;

@@ -1,0 +1,12 @@
+const r=require('express').Router();
+const c=require('../controllers/register.controller');
+const {authenticate,allow,ROLES}=require('../middleware/auth');
+r.use('/register',authenticate);
+r.get('/register/shifts',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.list);
+r.post('/register/open',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.open);
+r.get('/register/shifts/:id/summary',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.summary);
+r.post('/register/shifts/:id/pause',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.pause);
+r.post('/register/shifts/:id/movements',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.movement);
+r.post('/register/shifts/:id/close',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.close);
+r.post('/register/shifts/:id/approve',allow(ROLES.ADMIN,ROLES.MANAGER),c.approve);
+module.exports=r;

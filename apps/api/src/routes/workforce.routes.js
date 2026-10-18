@@ -1,0 +1,14 @@
+const r=require('express').Router();
+const c=require('../controllers/workforce.controller');
+const {authenticate,allow,ROLES}=require('../middleware/auth');
+r.use('/workforce',authenticate);
+r.get('/workforce/shifts',allow(ROLES.ADMIN,ROLES.MANAGER),c.list);
+r.post('/workforce/shifts',allow(ROLES.ADMIN,ROLES.MANAGER),c.create);
+r.post('/workforce/shifts/:id/assign',allow(ROLES.ADMIN,ROLES.MANAGER),c.assign);
+r.get('/workforce/qr/:branchId',allow(ROLES.ADMIN,ROLES.MANAGER),c.qr);
+r.get('/workforce/my-attendance',c.myAttendance);
+r.post('/workforce/check-in',c.checkIn);
+r.post('/workforce/check-out',c.checkOut);
+r.post('/workforce/requests',c.request);
+r.patch('/workforce/requests/:id/review',allow(ROLES.ADMIN,ROLES.MANAGER),c.review);
+module.exports=r;

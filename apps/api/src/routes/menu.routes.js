@@ -1,0 +1,13 @@
+const r=require('express').Router();
+const c=require('../controllers/menu.controller');
+const {authenticate,allow,ROLES}=require('../middleware/auth');
+r.get('/menu',c.list);
+r.get('/categories',c.categories);
+r.get('/menu/manage',authenticate,allow(ROLES.ADMIN,ROLES.MANAGER),c.manage);
+r.post('/categories',authenticate,allow(ROLES.ADMIN),c.createCategory);
+r.post('/products',authenticate,allow(ROLES.ADMIN),c.create);
+r.put('/products/:id',authenticate,allow(ROLES.ADMIN),c.update);
+r.patch('/products/:id/status',authenticate,allow(ROLES.ADMIN),c.status);
+r.patch('/products/:id/availability',authenticate,allow(ROLES.ADMIN,ROLES.MANAGER),c.branchAvailability);
+r.patch('/products/:id/branch-price',authenticate,allow(ROLES.ADMIN,ROLES.MANAGER),c.branchPrice);
+module.exports=r;

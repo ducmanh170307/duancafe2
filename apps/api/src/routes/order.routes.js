@@ -1,0 +1,18 @@
+const r=require('express').Router();
+const {rateLimit}=require('express-rate-limit');
+const c=require('../controllers/order.controller');
+const {authenticate,optionalAuth,allow,ROLES}=require('../middleware/auth');
+r.post('/public/orders',rateLimit({windowMs:15*60*1000,limit:30,standardHeaders:'draft-8',legacyHeaders:false}),optionalAuth,c.createPublic);
+r.get('/public/orders/:code',c.lookup);
+r.get('/public/queue',c.queue);
+r.use('/orders',authenticate);
+r.get('/orders/kds',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.BARISTA),c.kds);
+r.get('/orders',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER,ROLES.BARISTA),c.list);
+r.post('/orders',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.createPOS);
+r.get('/orders/:id',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER,ROLES.BARISTA),c.detail);
+r.get('/orders/:id/receipt',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.receipt);
+r.post('/orders/:id/pay',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.pay);
+r.patch('/orders/:id/status',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.BARISTA),c.updateStatus);
+r.post('/orders/:id/remake',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.BARISTA),c.remake);
+r.post('/orders/:id/cancel',allow(ROLES.ADMIN,ROLES.MANAGER,ROLES.CASHIER),c.cancel);
+module.exports=r;
