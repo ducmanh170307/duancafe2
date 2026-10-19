@@ -1,0 +1,10 @@
+export const money=value=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(Number(value)||0);
+export const dayDate=value=>value?new Date(String(value).replace(' ','T')+'+07:00').toLocaleDateString('vi-VN'):'—';
+export const dateTime=value=>value?new Date(String(value).replace(' ','T')+'+07:00').toLocaleString('vi-VN',{dateStyle:'short',timeStyle:'short'}):'—';
+export const hour=value=>value?String(value).slice(11,16):'—';
+export const ROLE_LABELS={ADMIN:'Chủ chuỗi / Admin',BRANCH_MANAGER:'Quản lý chi nhánh',CASHIER:'Thu ngân',BARISTA:'Pha chế',CUSTOMER:'Khách hàng'};
+export const ORDER_STATUS={PENDING_PAYMENT:'Chờ thanh toán',CONFIRMED:'Đã xác nhận',PREPARING:'Đang pha chế',READY:'Sẵn sàng giao',DELIVERING:'Đang giao',COMPLETED:'Hoàn tất',CANCELLED:'Đã hủy'};
+export const SHIFT_STATUS={OPEN:'Đang mở',PAUSED:'Tạm khóa',PENDING_APPROVAL:'Chờ duyệt chốt',CLOSED:'Đã chốt'};
+export const PAY_STATUS={UNPAID:'Chưa thu',PARTIAL:'Thanh toán một phần',PAID:'Đã thanh toán',REFUNDED:'Đã hoàn tiền'};
+export const PROMO_STATUS={DRAFT:'Bản nháp',SCHEDULED:'Đã lên lịch',ACTIVE:'Hoạt động',PAUSED:'Tạm dừng',ENDED:'Kết thúc'};
+export const dateLocalInput=(days=0)=>{const d=new Date(Date.now()+days*86400000);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);};

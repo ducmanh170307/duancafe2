@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@theme {--font-vn:"Be Vietnam Pro","DM Sans",sans-serif;}
+:root {font-family:"Be Vietnam Pro","DM Sans",sans-serif;font-synthesis:none;text-rendering:optimizeLegibility;}
+body{margin:0;background:#f7f4ef;color:#2f2923;}
+button,select,input,textarea{font:inherit;}
+button{cursor:pointer;}
+.form-label{display:block;font-size:11px;font-weight:700;color:#716657;margin-bottom:8px;}
+.form-input{display:block;width:100%;min-width:0;border:1px solid #e5ded4;background:#fff;border-radius:12px;padding:11px 13px;font-size:13px;color:#38302a;outline:0;transition:box-shadow .2s,border-color .2s;}
+.form-input:focus{border-color:#9e7353;box-shadow:0 0 0 3px #b88a6024;}
+.form-input:disabled{background:#f1eee9;}
+.form-input::placeholder{color:#aba297;}
+button:focus-visible,a:focus-visible{outline:3px solid #cda378;outline-offset:2px;}
+.scrollbar-thin::-webkit-scrollbar{width:5px}.scrollbar-thin::-webkit-scrollbar-thumb{background:#5a4a3d;border-radius:10px}
+.menu-card{transition:transform .2s,box-shadow .2s}.menu-card:hover{transform:translateY(-3px);box-shadow:0 15px 25px rgba(83,57,37,.10)}
+.pill-tabs::-webkit-scrollbar{height:0}
+@media print{aside,header,footer,.no-print{display:none!important}main{padding:0!important}.print-page{display:block!important}}

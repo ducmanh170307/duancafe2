@@ -1,0 +1,25 @@
+{
+  "name": "@coffee/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test tests/*.test.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:seed": "node src/db/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.15.0"
+  },
+  "engines": {"node": ">=22.12.0"}
+}

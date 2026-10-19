@@ -1,0 +1,34 @@
+const express=require('express');
+const helmet=require('helmet');
+const cors=require('cors');
+const morgan=require('morgan');
+const {rateLimit}=require('express-rate-limit');
+const {HttpError}=require('./utils/http');
+const app=express();
+app.disable('x-powered-by');
+app.use(helmet());
+app.use(cors({origin:(origin,cb)=>{
+ const allowed=(process.env.CORS_ORIGINS||'http://localhost:5173,http://127.0.0.1:5173').split(',');
+ cb(null,!origin||allowed.includes(origin));
+}}));
+app.use(express.json({limit:'1mb'}));
+app.use(morgan('dev'));
+app.get('/api/health',(req,res)=>res.json({status:'ok',service:'coffee-chain-api'}));
+app.use('/api/auth/login',rateLimit({windowMs:15*60*1000,limit:20,standardHeaders:'draft-8',legacyHeaders:false}));
+app.use('/api',require('./routes/auth.routes'));
+app.use('/api',require('./routes/menu.routes'));
+app.use('/api',require('./routes/workforce.routes'));
+app.use('/api',require('./routes/register.routes'));
+app.use('/api',require('./routes/order.routes'));
+app.use('/api',require('./routes/inventory.routes'));
+app.use('/api',require('./routes/promotion.routes'));
+app.use((req,res)=>res.status(404).json({success:false,message:'Không tìm thấy API'}));
+app.use((error,req,res,next)=>{
+ if(error.code==='ER_DUP_ENTRY')return res.status(409).json({success:false,message:'Dữ liệu đã tồn tại'});
+ if(error.code==='ER_NO_REFERENCED_ROW_2')return res.status(400).json({success:false,message:'Không tìm thấy dữ liệu liên quan'});
+ if(error instanceof SyntaxError && 'body' in error) return res.status(400).json({success:false,message:'JSON không hợp lệ'});
+ const status=error instanceof HttpError?error.status:500;
+ if(status===500)console.error(error);
+ res.status(status).json({success:false,message:status===500?'Có lỗi máy chủ, vui lòng thử lại':error.message});
+});
+module.exports=app;
