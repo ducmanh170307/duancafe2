@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiotCafe Chain ERP & POS - Quản Trị Chuỗi Cà Phê Đa Chi Nhánh</title>
+    <style>
+        :root {
+            --bg-page: #eef3f1;
+            --bg-card: #ffffff;
+            --bg-mint: #e8f5e9;
+            --border-mint: #c8e6c9;
+            --primary-dark: #0f5132;
+            --primary-green: #008848;
+            --primary-light: #16a34a;
+            --accent-blue: #0070f3;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+        body { background-color: var(--bg-page); color: var(--text-main); margin: 0; padding: 14px; }
+
+        .app-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border-radius: 18px;
+            border: 1px solid #d1dfd8;
+            box-shadow: 0 12px 30px rgba(15, 81, 50, 0.08);
+            overflow: hidden;
+        }
+
+        /* HEADER CHUỖI CHI NHÁNH & PHÂN QUYỀN */
+        .top-header {
+            background: linear-gradient(135deg, #0f5132 0%, #008848 100%);
+            padding: 15px 24px;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-logo {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: #ffffff; color: var(--primary-green);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .top-header h1 { margin: 0; font-size: 19px; font-weight: 800; }
+        .top-header .sub-brand { font-size: 12px; opacity: 0.92; }
+
+        .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .ctrl-pill {
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+        .ctrl-pill select {
+            margin: 0; padding: 5px 8px; width: auto; font-weight: 700;
+            font-size: 12.5px; color: var(--primary-dark); border-radius: 6px; border: none;
+        }
+
+        .shift-badge { padding: 7px 14px; border-radius: 25px; font-size: 12.5px; font-weight: 800; background: #ffffff; }
+        .shift-open { color: #008848; }
+        .shift-closed { color: #dc2626; }
+
+        /* THANH ĐIỀU HƯỚNG CÁC LUỒNG */
+        .nav-tabs {
+            display: flex;
+            background: #ffffff;
+            padding: 10px 16px 0 16px;
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+            gap: 6px;
+        }
+        .nav-tab {
+            padding: 10px 13px 12px 13px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 13px;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.2s ease;
+        }
+        .step-circle {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #e2e8f0; color: #475569;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800;
+        }
+        .nav-tab:hover { color: var(--primary-green); background: var(--bg-mint); }
+        .nav-tab.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--primary-green);
+            background: var(--bg-mint);
+        }
+        .nav-tab.active .step-circle { background: var(--primary-green); color: #ffffff; }
+
+        .tab-pane { display: none; padding: 22px; background: #f8faf9; }
+        .tab-pane.active { display: block; }
+
+        /* LƯỚI & THẺ CARD */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
+        .grid-pos { display: grid; grid-template-columns: 1.65fr 1.35fr; gap: 20px; }
+        @media (max-width: 992px) { .grid-2, .grid-pos, .grid-3 { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid #dce6e1;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+        .card h3 {
+            margin-top: 0; color: var(--primary-dark); font-size: 15.5px;
+            border-bottom: 2px solid var(--bg-mint); padding-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .tip-box {
+            background: var(--bg-mint); border: 1px solid var(--border-mint);
+            border-left: 4px solid var(--primary-green); color: var(--primary-dark);
+            padding: 10px 14px; border-radius: 10px; font-size: 13px; margin: 10px 0;
+        }
+        .lock-box {
+            background: #fef3c7; border: 1px solid #fde68a;
+            border-left: 4px solid #f59e0b; color: #92400e;
+            padding: 12px 15px; border-radius: 10px; font-size: 13px; margin: 10px 0;
+        }
+
+        .stat-card {
+            background: #ffffff; border: 1px solid #dce6e1; border-radius: 14px;
+            padding: 15px 18px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .stat-val { font-size: 22px; font-weight: 800; color: var(--primary-green); margin-top: 4px; }
+        .stat-label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+
+        /* FORM & BUTTON */
+        label { font-size: 12.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px; }
+        input, select {
+            padding: 9px 12px; background: #ffffff; border: 1px solid #cbd5e1;
+            border-radius: 9px; color: var(--text-main); font-size: 13.5px;
+            outline: none; width: 100%; margin-bottom: 10px;
+        }
+        input:focus, select:focus { border-color: var(--primary-green); box-shadow: 0 0 0 3px rgba(0, 136, 72, 0.12); }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .form-row > * { flex: 1; margin-bottom: 0; }
+
+        button {
+            padding: 10px 16px; border: none; border-radius: 9px; font-weight: 700;
+            font-size: 13px; cursor: pointer; color: white; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+        .btn-green { background: var(--primary-green); }
+        .btn-blue { background: var(--accent-blue); }
+        .btn-orange { background: #f59e0b; }
+        .btn-red { background: #ef4444; }
+        .btn-outline { background: var(--bg-mint); color: var(--primary-dark); border: 1px solid var(--border-mint); }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13px; background: #fff; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eef2f6; }
+        th { background: #f1f7f4; color: var(--primary-dark); font-size: 11.5px; font-weight: 800; text-transform: uppercase; }
+        tr:hover { background: #f8fcf9; }
+
+        .badge { padding: 4px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .bg-ok { background: #dcfce7; color: #15803d; }
+        .bg-warn { background: #fef3c7; color: #b45309; }
+        .bg-err { background: #fee2e2; color: #b91c1c; }
+
+        /* POS & BÀN */
+        .cat-pills { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .cat-pill {
+            padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700;
+            background: #f1f5f9; color: #475569; cursor: pointer;
+        }
+        .cat-pill.active { background: var(--primary-green); color: #ffffff; }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 12px; }
+        .menu-item {
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .menu-item:hover { border-color: var(--primary-green); box-shadow: 0 5px 12px rgba(0, 136, 72, 0.1); }
+        .menu-item h4 { margin: 0 0 4px 0; font-size: 14.5px; }
+        .menu-item .price { color: var(--primary-green); font-weight: 800; font-size: 14.5px; }
+        .plus-btn {
+            width: 26px; height: 26px; border-radius: 50%; background: var(--primary-green);
+            color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        .table-map { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
+        .table-node {
+            padding: 10px; border-radius: 10px; text-align: center; cursor: pointer;
+            font-weight: 700; font-size: 12.5px; border: 2px solid transparent;
+        }
+        .table-free { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+        .table-busy { background: #dcfce7; color: #0f5132; border-color: #16a34a; }
+        .table-selected { box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.35); border-color: var(--accent-blue); }
+
+        .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+        .kds-card { background: #ffffff; border: 2px solid var(--primary-green); border-radius: 14px; padding: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- HEADER ĐA CHI NHÁNH & PHÂN QUYỀN -->
+    <div class="top-header">
+        <div class="brand-box">
+            <div class="brand-logo">K</div>
+            <div>
+                <h1>KiotCafe Chain ERP & POS</h1>
+                <div class="sub-brand" id="currentBranchSubtitle">Đang quản lý: Chi nhánh Quận 1 - Nguyễn Huệ</div>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <div class="ctrl-pill">
+                <span>🏢 Chi nhánh:</span>
+                <select id="branchSelector" onchange="onBranchChange()"></select>
+            </div>
+            <div class="ctrl-pill">
+                <span>👤 Vai trò:</span>
+                <select id="roleSelector" onchange="onRoleChange(this.value)">
+                    <option value="ADMIN">👑 Chủ chuỗi / Admin (Toàn quyền)</option>
+                    <option value="MANAGER">👔 Quản lý Chi nhánh (Xếp ca, Kho, POS)</option>
+                    <option value="CASHIER">💼 Nhân viên Thu ngân (Chấm công, Mở ca, POS)</option>
+                    <option value="BARISTA">👨‍🍳 Nhân viên Pha chế (Chấm công, KDS)</option>
+                    <option value="CUSTOMER">📱 Khách hàng (Đặt món Online)</option>
+                </select>
+            </div>
+            <div id="globalShiftBadge" class="shift-badge shift-open">🟢 Đang tải ca...</div>
+        </div>
+    </div>
+
+    <!-- THANH ĐIỀU HƯỚNG ĐỦ CÁC LUỒNG + QUẢN LÝ CHUỖI CHI NHÁNH -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="tab0" onclick="switchTab('tab0', this)"><span class="step-circle">🏢</span> Quản Lý Chuỗi Chi Nhánh</div>
+        <div class="nav-tab" data-tab="tab1" onclick="switchTab('tab1', this)"><span class="step-circle">1</span> Phân Ca & Chấm Công</div>
+        <div class="nav-tab" data-tab="tab2" onclick="switchTab('tab2', this)"><span class="step-circle">2</span> Mở Ca & Chốt Ca POS</div>
+        <div class="nav-tab" data-tab="tab3" onclick="switchTab('tab3', this)"><span class="step-circle">3</span> Bán Hàng Tại Quầy (POS)</div>
+        <div class="nav-tab" data-tab="tab3d" onclick="switchTab('tab3d', this)"><span class="step-circle">4</span> Màn Hình Pha Chế (KDS)</div>
+        <div class="nav-tab" data-tab="tab4" onclick="switchTab('tab4', this)"><span class="step-circle">5</span> Khách Đặt Món Online</div>
+        <div class="nav-tab" data-tab="tab6" onclick="switchTab('tab6', this)"><span class="step-circle">6</span> Quản Lý Menu Chuỗi</div>
+        <div class="nav-tab" data-tab="tab7" onclick="switchTab('tab7', this)"><span class="step-circle">7</span> Kho & Chuyển Kho CN</div>
+        <div class="nav-tab" data-tab="tab8" onclick="switchTab('tab8', this)"><span class="step-circle">8</span> Khuyến Mãi & CRM</div>
+    </div>
+
+    <!-- ==================== TAB 0: QUẢN LÝ CHUỖI CHI NHÁNH (DÀNH CHO CHỦ CHUỖI) ==================== -->
+    <div id="tab0" class="tab-pane active">
+        <div class="grid-3" id="chainOverviewStats"></div>
+        <div class="grid-2">
+            <div class="card">
+                <h3>🏢 Danh Sách Chi Nhánh Trong Chuỗi & Điều Khiển Trạng Thái</h3>
+                <div class="tip-box">💡 Chủ chuỗi hoặc Quản lý có thể bật trạng thái <strong>"Quá tải (Overload)"</strong> hoặc <strong>"Đóng cửa"</strong> để tạm ngưng nhận đơn Online khi quán đông khách (Đúng chuẩn Luồng 3E & Luồng 4).</div>
+                <table>
+                    <thead><tr><th>Mã</th><th>Tên Chi Nhánh</th><th>Địa Chỉ</th><th>Nhân Sự</th><th>Doanh Thu</th><th>Trạng Thái</th><th>Điều Khiển</th></tr></thead>
+                    <tbody id="tableBranches"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>➕ Khai Trương Chi Nhánh Mới Trong Chuỗi</h3>
+                <div class="tip-box">Khi tạo chi nhánh mới, hệ thống tự động khởi tạo danh mục Tồn kho nguyên liệu tiêu chuẩn cho chi nhánh đó.</div>
+                <label>Tên Chi Nhánh Mới:</label>
+                <input type="text" id="newBranchName" placeholder="VD: Chi nhánh Đà Nẵng - Cầu Rồng">
+                <label>Địa Chỉ Chi Nhánh:</label>
+                <input type="text" id="newBranchAddr" placeholder="VD: 88 Bạch Đằng, Hải Châu, Đà Nẵng">
+                <label>Số Điện Thoại Hotline:</label>
+                <input type="text" id="newBranchPhone" placeholder="VD: 02363888999">
+                <button class="btn-green" style="width:100%" onclick="createNewBranch()">🚀 KHỞI TẠO CHI NHÁNH MỚI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 1: PHÂN CA & CHẤM CÔNG ==================== -->
+    <div id="tab1" class="tab-pane">
+        <div class="grid-2">
+            <div class="card">
+                <h3>📅 1A. Lịch Phân Ca Làm Việc (<span class="branch-name-label">Chi nhánh hiện tại</span>)</h3>
+                
+                <!-- Khối chỉ dành cho Quản lý / Chủ chuỗi -->
+                <div id="managerShiftPanel">
+                    <div class="tip-box">👑 <strong>Quyền Quản lý:</strong> Bạn đang ở chế độ Quản lý/Admin nên có quyền tạo và xếp ca làm việc cho nhân viên.</div>
+                    <div class="form-row">
+                        <div>
+                            <label>Chọn Nhân Viên:</label>
+                            <select id="hrNhanVien"></select>
+                        </div>
+                        <div>
+                            <label>Chọn Ca Làm:</label>
+                            <select id="hrCaMau">
+                                <option value="1">Ca Sáng (06:30 - 14:30)</option>
+                                <option value="2">Ca Chiều (14:30 - 22:30)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Vị Trí Phân Công:</label>
+                            <select id="hrViTri">
+                                <option value="Thu ngân">Thu ngân</option>
+                                <option value="Pha chế">Pha chế</option>
+                                <option value="Phục vụ">Phục vụ</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:flex-end;">
+                            <button class="btn-green" style="width:100%" onclick="assignShift()">➕ Xếp Ca Cho Nhân Viên</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông báo khóa quyền khi ở chế độ Nhân viên -->
+                <div id="staffShiftLockNotice" class="lock-box" style="display:none;">
+                    🔒 <strong>Chế độ Nhân viên:</strong> Bạn chỉ được phép <strong>Xem lịch làm việc</strong> hoặc bấm nút <strong>"Xin đổi/nghỉ ca"</strong> ở bảng dưới. Chức năng Xếp ca đã bị khóa (Chỉ dành cho Quản lý chi nhánh).
+                </div>
+
+                <table>
+                    <thead><tr><th>Nhân Viên</th><th>Ca Làm</th><th>Vị Trí</th><th>Trạng Thái & Ghi Chú</th><th>Thao Tác</th></tr></thead>
+                    <tbody id="tablePhanCa"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>⏱️ 1B. Chấm Công Vào / Tan Ca (GPS / WiFi / QR)</h3>
+                <div class="tip-box">✅ Nhân viên đến ca thực hiện Check-in xác thực GPS/WiFi chi nhánh. Cuối ca bấm Check-out để tính công.</div>
+                <div class="form-row">
+                    <div>
+                        <label>Nhân Viên Thực Hiện:</label>
+                        <select id="ccNhanVien"></select>
+                    </div>
+                    <div>
+                        <label>Phương Thức Xác Thực:</label>
+                        <select id="ccPhuongThuc">
+                            <option value="App_GPS">📍 App (GPS Chi nhánh)</option>
+                            <option value="App_WiFi">📶 App (WiFi Chi nhánh)</option>
+                            <option value="Fingerprint">👆 Vân tay tại máy</option>
+                            <option value="QR">📷 Quét mã QR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn-green" onclick="checkInOut('checkin')">📲 Check-In Vào Ca</button>
+                    <button class="btn-orange" onclick="checkInOut('checkout')">🚪 Check-Out Tan Ca</button>
+                </div>
+                <table>
+                    <thead><tr><th>Nhân Viên</th><th>Giờ Check-In</th><th>Giờ Check-Out</th><th>Phương Thức</th><th>Trạng Thái</th></tr></thead>
+                    <tbody id="tableChamCong"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 2 & 5: MỞ CA, THU CHI & ĐÓNG CA ==================== -->
+    <div id="tab2" class="tab-pane">
+        <div class="grid-2">
+            <div class="card">
+                <h3>🔓 Luồng 2: Mở Ca Quầy POS (<span class="branch-name-label"></span>)</h3>
+                <label>Mã PIN Nhân Viên Mở Ca (1111: Thu ngân, 8888: Quản lý, 9999: Chủ chuỗi):</label>
+                <input type="password" id="pinMoCa" value="1111">
+                <label>Tiền Mặt Đầu Ca Đếm Trong Két (VNĐ):</label>
+                <input type="number" id="tienDauCa" value="1000000">
+                <label>Ghi Chú Đối Chiếu Đầu Ca:</label>
+                <input type="text" id="lyDoDauCa" value="Khớp 100% với tiền giữ lại cuối ca trước">
+                <button class="btn-green" style="width:100%" onclick="openPOSShift()">🚀 XÁC NHẬN MỞ CA BÁN HÀNG</button>
+
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin:18px 0;">
+                <h3>💸 Lập Phiếu Thu / Chi Nội Bộ Trong Ca</h3>
+                <div class="form-row">
+                    <select id="loaiThuChi">
+                        <option value="CHI">Phiếu CHI (Mua đá, vật tư...)</option>
+                        <option value="THU">Phiếu THU (Nạp thêm tiền lẻ)</option>
+                    </select>
+                    <input type="number" id="soTienThuChi" placeholder="Số tiền (VNĐ)...">
+                </div>
+                <div class="form-row">
+                    <input type="text" id="lyDoThuChi" placeholder="Lý do (VD: Mua 5 túi đá viên)">
+                    <button class="btn-blue" onclick="submitThuChi()">➕ Ghi Phiếu</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔒 Luồng 5: Đối Soát Tiền Mặt & Đóng Ca (Chốt Sổ)</h3>
+                <div id="shiftSummaryBox" class="tip-box" style="line-height:1.7;"></div>
+                <label>Tiền Mặt Thực Tế Kiểm Đếm Cuối Ca (VNĐ):</label>
+                <input type="number" id="tienThucTeCuoiCa">
+                <label>Lý Do Chênh Lệch (Nếu Thực đếm ≠ Dự kiến):</label>
+                <input type="text" id="lyDoLechCuoiCa" value="Khớp két hoàn toàn">
+                <button class="btn-red" style="width:100%" onclick="closePOSShift()">🔒 CHỐT CA & KHÓA SỔ BÁO CÁO</button>
+
+                <h4 style="margin:18px 0 6px 0; color:var(--primary-dark);">Lịch Sử Phiên Ca Tại Chi Nhánh Này</h4>
+                <table>
+                    <thead><tr><th>Mã Ca</th><th>Thu Ngân</th><th>Đầu Ca</th><th>Thu Bán Hàng</th><th>Thực Đếm</th><th>Lệch</th><th>Trạng Thái</th></tr></thead>
+                    <tbody id="tableLichSuCa"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 3: BÁN HÀNG TẠI QUẦY POS ==================== -->
+    <div id="tab3" class="tab-pane">
+        <div class="grid-pos">
+            <div>
+                <div class="card">
+                    <h3>🪑 Sơ Đồ Bàn Tại <span class="branch-name-label"></span> <button class="btn-outline" style="padding:5px 10px; font-size:12px;" onclick="freeSelectedTable()">🔄 Trả Bàn Đang Chọn</button></h3>
+                    <div id="tableMapGrid" class="table-map"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🍹 Thực Đơn Gọi Món POS</h3>
+                    <div class="cat-pills">
+                        <span class="cat-pill active" onclick="filterPOSCategory('ALL', this)">Tất cả</span>
+                        <span class="cat-pill" onclick="filterPOSCategory('Cà Phê', this)">Cà phê</span>
+                        <span class="cat-pill" onclick="filterPOSCategory('Trà Trái Cây', this)">Trà trái cây</span>
+                        <span class="cat-pill" onclick="filterPOSCategory('Trà Sữa', this)">Trà sữa</span>
+                        <span class="cat-pill" onclick="filterPOSCategory('Bánh', this)">Bánh ngọt</span>
+                    </div>
+                    <div class="form-row">
+                        <select id="posSize">
+                            <option value="S" data-extra="0">Size S (+0đ)</option>
+                            <option value="M" data-extra="5000" selected>Size M (+5.000đ)</option>
+                            <option value="L" data-extra="10000">Size L (+10.000đ)</option>
+                        </select>
+                        <select id="posDuong">
+                            <option value="100% Đường">100% Đường</option>
+                            <option value="70% Đường">70% Đường</option>
+                            <option value="50% Đường">50% Đường</option>
+                            <option value="Không Đường">0% Đường</option>
+                        </select>
+                        <select id="posDa">
+                            <option value="100% Đá">100% Đá</option>
+                            <option value="Ít Đá">Ít Đá</option>
+                            <option value="Không Đá">Không Đá</option>
+                        </select>
+                    </div>
+                    <div id="posMenuGrid" class="menu-grid"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🧾 Hóa Đơn Tạm Tính (<span id="selectedTableLabel" style="color:var(--primary-green)">Bàn 1</span>)</h3>
+                <div class="form-row">
+                    <select id="posHinhThuc" onchange="updateTableLabel()">
+                        <option value="Dine_In">🍽️ Uống tại chỗ</option>
+                        <option value="Take_Away">🛍️ Mang đi (Take-away)</option>
+                    </select>
+                    <input type="text" id="posSDTKhach" placeholder="📱 SĐT Thành viên (VD: 0988888888)">
+                </div>
+                <div class="form-row">
+                    <select id="posKhuyenMai" onchange="renderPOSCart()">
+                        <option value="0">-- Chọn Khuyến Mãi / Voucher --</option>
+                    </select>
+                    <select id="posPhuongThuc">
+                        <option value="CASH">💵 Tiền mặt (Tự mở két)</option>
+                        <option value="VIETQR">📱 Chuyển khoản VietQR</option>
+                        <option value="CARD">💳 Quẹt thẻ Ngân hàng</option>
+                    </select>
+                </div>
+
+                <table>
+                    <thead><tr><th>Tên Món</th><th>Tùy Chọn</th><th>SL</th><th>Thành Tiền</th><th>Xóa</th></tr></thead>
+                    <tbody id="posCartBody"></tbody>
+                </table>
+
+                <div style="margin-top:14px; padding:14px; background:var(--bg-mint); border-radius:12px; border:1px solid var(--border-mint);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>Tổng tiền hàng:</span><strong id="posSubTotal">0đ</strong></div>
+                    <div style="display:flex; justify-content:space-between; color:var(--primary-green); margin-bottom:5px;"><span>Giảm giá ưu đãi:</span><strong id="posDiscount">-0đ</strong></div>
+                    <div style="display:flex; justify-content:space-between; font-size:18px; color:var(--primary-dark); border-top:1px dashed #a7f3d0; padding-top:6px;">
+                        <strong>TỔNG PHẢI THU:</strong><strong id="posFinalTotal">0đ</strong>
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top:12px;">
+                    <input type="number" id="posTienKhachDua" placeholder="Tiền mặt khách đưa...">
+                    <button class="btn-green" onclick="checkoutOrder('POS')">✅ THANH TOÁN & ĐẨY KDS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 3D & 3E: MÀN HÌNH KDS PHA CHẾ ==================== -->
+    <div id="tab3d" class="tab-pane">
+        <div class="card">
+            <h3>👨‍🍳 Hàng Đợi Pha Chế KDS Tại <span class="branch-name-label"></span> <button class="btn-green" onclick="loadKDS()">🔄 Làm Mới KDS</button></h3>
+            <div class="tip-box">💡 Pha chế bấm <strong>"Hoàn tất"</strong> để phát loa gọi số, bấm <strong>"Làm lại"</strong> nếu pha sai (tự trừ kho hao hụt), hoặc <strong>"Hủy hoàn tiền"</strong> (cần mã PIN Quản lý `9999` hoặc `8888`).</div>
+            <div id="kdsContainer" class="kds-grid"></div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 4: KHÁCH ĐẶT MÓN ONLINE ==================== -->
+    <div id="tab4" class="tab-pane">
+        <div class="card" style="max-width:780px; margin:0 auto;">
+            <h3>📱 App Khách Hàng Đặt Món Online (Chọn Chi Nhánh Gần Nhất)</h3>
+            <div class="tip-box">🛵 Nếu chi nhánh đang chọn ở trạng thái "Đóng cửa" hoặc "Quá tải", hệ thống sẽ tự động chặn đặt đơn đúng theo đặc tả Luồng 4.</div>
+            <div class="form-row">
+                <div>
+                    <label>Chọn Chi Nhánh Đặt Hàng:</label>
+                    <select id="onlBranchSelect"></select>
+                </div>
+                <div>
+                    <label>Số Điện Thoại Tích Điểm:</label>
+                    <input type="text" id="onlSDT" value="0912345678">
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Hình Thức Nhận:</label>
+                    <select id="onlHinhThuc">
+                        <option value="Delivery">🛵 Giao hàng tận nơi</option>
+                        <option value="Take_Away">🏪 Hẹn giờ lấy tại quầy</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Địa Chỉ Giao Hàng:</label>
+                    <input type="text" id="onlDiaChi" value="Tòa nhà CMC, Duy Tân, Cầu Giấy">
+                </div>
+            </div>
+            <div class="form-row">
+                <div style="flex:2;">
+                    <label>Chọn Món:</label>
+                    <select id="onlMon"></select>
+                </div>
+                <div>
+                    <label>Số Lượng:</label>
+                    <input type="number" id="onlSoLuong" value="2" min="1">
+                </div>
+            </div>
+            <button class="btn-green" style="width:100%; padding:13px;" onclick="orderOnlineQuick()">🚀 ĐẶT ĐƠN ONLINE NGAY</button>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 6: QUẢN LÝ MENU CHUỖI ==================== -->
+    <div id="tab6" class="tab-pane">
+        <div class="card">
+            <h3>📋 Quản Lý Thực Đơn Toàn Chuỗi (Thêm / Sửa / Xóa Mềm)</h3>
+            <form class="form-row" onsubmit="addMenuProduct(event)">
+                <select id="addMaDanhMuc" required>
+                    <option value="1">Cà Phê Truyền Thống</option>
+                    <option value="2">Trà Trái Cây</option>
+                    <option value="3">Trà Sữa</option>
+                    <option value="4">Bánh Ngọt</option>
+                </select>
+                <input type="text" id="addTen" placeholder="Tên sản phẩm mới..." required>
+                <input type="number" id="addGia" placeholder="Giá bán chuẩn (VNĐ)..." required>
+                <button type="submit" class="btn-green">➕ Thêm Món Mới</button>
+            </form>
+            <div class="form-row">
+                <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm tên món..." oninput="fetchMenuProducts()">
+                <select id="sortInput" onchange="fetchMenuProducts()" style="max-width:240px;">
+                    <option value="MaSanPham-DESC">🕒 Mới nhất</option>
+                    <option value="GiaBan-ASC">💲 Giá tăng dần</option>
+                    <option value="GiaBan-DESC">💲 Giá giảm dần</option>
+                </select>
+            </div>
+            <table>
+                <thead><tr><th>Mã</th><th>Tên Món</th><th>Danh Mục</th><th>Trạm Pha Chế</th><th>Giá Bán</th><th>Trạng Thái</th><th>Thao Tác</th></tr></thead>
+                <tbody id="product-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 7: QUẢN LÝ KHO & CHUYỂN KHO LIÊN CHI NHÁNH ==================== -->
+    <div id="tab7" class="tab-pane">
+        <div class="grid-2">
+            <div class="card">
+                <h3>📥 7A. Nhập Kho Tại <span class="branch-name-label"></span></h3>
+                <label>Chọn Nguyên Liệu:</label>
+                <select id="khoNguyenLieu"></select>
+                <div class="form-row">
+                    <div>
+                        <label>Số Lượng Nhập:</label>
+                        <input type="number" id="khoSoLuong" value="2000">
+                    </div>
+                    <div>
+                        <label>Đơn Giá Nhập (VNĐ):</label>
+                        <input type="number" id="khoDonGia" value="350">
+                    </div>
+                </div>
+                <button class="btn-green" style="width:100%" onclick="submitImportInventory()">📦 XÁC NHẬN NHẬP KHO CHI NHÁNH</button>
+
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin:18px 0;">
+                <h3>🚚 7B. Điều Chuyển Kho Giữa Các Chi Nhánh Trong Chuỗi</h3>
+                <div class="form-row">
+                    <div>
+                        <label>Từ Chi Nhánh Xuất:</label>
+                        <select id="transferFromBranch"></select>
+                    </div>
+                    <div>
+                        <label>Sang Chi Nhánh Nhận:</label>
+                        <select id="transferToBranch"></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <select id="transferMaterial"></select>
+                    <input type="number" id="transferQty" placeholder="Số lượng chuyển..." value="500">
+                    <button class="btn-blue" onclick="transferStockBetweenBranches()">🚚 Chuyển Kho</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Tồn Kho Thực Tế Tại <span class="branch-name-label"></span></h3>
+                <table>
+                    <thead><tr><th>Nguyên Liệu</th><th>Đơn Vị</th><th>Giá Vốn BQ</th><th>Tồn Tại Chi Nhánh</th><th>Cảnh Báo</th></tr></thead>
+                    <tbody id="tableTonKho"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LUỒNG 8: KHUYẾN MÃI & CRM ==================== -->
+    <div id="tab8" class="tab-pane">
+        <div class="grid-2">
+            <div class="card">
+                <h3>🎁 Tạo Chương Trình Khuyến Mãi Toàn Chuỗi</h3>
+                <div class="form-row">
+                    <input type="text" id="kmCode" placeholder="Mã Voucher (VD: HE2026)">
+                    <input type="text" id="kmTen" placeholder="Tên chương trình...">
+                </div>
+                <div class="form-row">
+                    <select id="kmLoai">
+                        <option value="Discount_Amount">Giảm thẳng tiền (VNĐ)</option>
+                        <option value="Discount_Percent">Giảm theo %</option>
+                    </select>
+                    <input type="number" id="kmGiaTri" placeholder="Giá trị giảm...">
+                    <input type="number" id="kmToiThieu" value="50000" placeholder="Đơn tối thiểu">
+                </div>
+                <button class="btn-green" style="width:100%" onclick="createPromo()">🚀 KÍCH HOẠT KHUYẾN MÃI</button>
+                <table>
+                    <thead><tr><th>Mã Code</th><th>Chương Trình</th><th>Loại</th><th>Giá Trị</th><th>Đơn Tối Thiểu</th></tr></thead>
+                    <tbody id="tableKhuyenMai"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>👑 Khách Hàng Thành Viên Toàn Chuỗi (Tự Động Xét Nâng Hạng)</h3>
+                <div class="tip-box">Tích điểm tự động trên mọi chi nhánh: Chi tiêu từ 1.000.000đ lên hạng <strong>Silver</strong>, từ 3.000.000đ lên hạng <strong>Gold</strong>.</div>
+                <table>
+                    <thead><tr><th>Họ Tên</th><th>Số Điện Thoại</th><th>Điểm Tích Lũy</th><th>Tổng Chi Tiêu</th><th>Hạng Thẻ</th></tr></thead>
+                    <tbody id="tableKhachHang"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = 'http://localhost:5000/api';
+    let currentBranchId = 1;
+    let currentRole = 'ADMIN';
+    let currentCatFilter = 'ALL';
+    let selectedTableId = 1;
+
+    // DỮ LIỆU ĐA CHI NHÁNH DỰ PHÒNG (Đảm bảo chạy mượt 100% mọi tính năng)
+    let fallbackState = {
+        branches: [
+            { MaChiNhanh: 1, TenChiNhanh: 'Chi nhánh Quận 1 - Nguyễn Huệ', DiaChi: '123 Nguyễn Huệ, Q.1, TP.HCM', SoDienThoai: '02838111222', SoNhanVien: 4, DoanhThuChiNhanh: 2850000, TrangThai: 'open' },
+            { MaChiNhanh: 2, TenChiNhanh: 'Chi nhánh Cầu Giấy - Hà Nội', DiaChi: '45 Xuân Thủy, Cầu Giấy, Hà Nội', SoDienThoai: '02437999888', SoNhanVien: 3, DoanhThuChiNhanh: 1920000, TrangThai: 'open' }
+        ],
+        activeShift: { MaPhienCa: 101, MaChiNhanh: 1, TenThuNgan: 'Lê Thu Ngân', TienMatDauCa: 1000000, TongThuTienMat: 2850000, TongHoanTienMat: 0, TongThuNoiBo: 0, TongChiNoiBo: 50000, TienMatDuKien: 3800000, TrangThai: 'open' },
+        historyShifts: [
+            { MaPhienCa: 101, TenThuNgan: 'Lê Thu Ngân', TienMatDauCa: 1000000, TongThuTienMat: 2850000, TienMatThucTeCuoiCa: null, TienChenhLech: null, TrangThai: 'open' }
+        ],
+        nhanVien: [
+            { MaNhanVien: 1, MaChiNhanh: 1, HoTen: 'Trần Đức Mạnh (Admin)', TenVaiTro: 'Chủ chuỗi / Admin' },
+            { MaNhanVien: 2, MaChiNhanh: 1, HoTen: 'Nguyễn Quản Lý', TenVaiTro: 'Quản lý chi nhánh' },
+            { MaNhanVien: 3, MaChiNhanh: 1, HoTen: 'Lê Thu Ngân', TenVaiTro: 'Thu ngân' },
+            { MaNhanVien: 4, MaChiNhanh: 1, HoTen: 'Phạm Pha Chế', TenVaiTro: 'Pha chế' }
+        ],
+        phanCa: [
+            { MaPhanCa: 1, MaChiNhanh: 1, HoTen: 'Lê Thu Ngân', TenCa: 'Ca Sáng', GioBatDau: '06:30', GioKetThuc: '14:30', ViTriLamViec: 'Thu ngân', TrangThai: 'scheduled', GhiChu: '' },
+            { MaPhanCa: 2, MaChiNhanh: 1, HoTen: 'Phạm Pha Chế', TenCa: 'Ca Sáng', GioBatDau: '06:30', GioKetThuc: '14:30', ViTriLamViec: 'Pha chế', TrangThai: 'scheduled', GhiChu: '' }
+        ],
+        chamCong: [
+            { HoTen: 'Lê Thu Ngân', ThoiGianCheckIn: new Date(), ThoiGianCheckOut: null, PhuongThuc: 'App_GPS' }
+        ],
+        products: [
+            { MaSanPham: 1, MaDanhMuc: 1, TenDanhMuc: 'Cà Phê Truyền Thống', TenSanPham: 'Cà Phê Đen Đá', GiaBan: 25000, TramPhaChe: 'Espresso_Bar', TrangThai: 'active' },
+            { MaSanPham: 2, MaDanhMuc: 1, TenDanhMuc: 'Cà Phê Truyền Thống', TenSanPham: 'Bạc Xỉu Đá', GiaBan: 35000, TramPhaChe: 'Espresso_Bar', TrangThai: 'active' },
+            { MaSanPham: 3, MaDanhMuc: 2, TenDanhMuc: 'Trà Trái Cây', TenSanPham: 'Trà Đào Cam Sả', GiaBan: 45000, TramPhaChe: 'Tea_Smoothie_Bar', TrangThai: 'active' },
+            { MaSanPham: 4, MaDanhMuc: 3, TenDanhMuc: 'Trà Sữa', TenSanPham: 'Trà Sữa Ô Long Trân Châu', GiaBan: 40000, TramPhaChe: 'Tea_Smoothie_Bar', TrangThai: 'active' }
+        ],
+        promos: [
+            { MaKhuyenMai: 1, MaCode: 'WELCOME10', TenChuongTrinh: 'Giảm 10% đơn từ 50k', LoaiKhuyenMai: 'Discount_Percent', GiaTriGiam: 10, DonToiThieu: 50000 },
+            { MaKhuyenMai: 2, MaCode: 'GIAM15K', TenChuongTrinh: 'Giảm 15.000đ đơn từ 100k', LoaiKhuyenMai: 'Discount_Amount', GiaTriGiam: 15000, DonToiThieu: 100000 }
+        ],
+        inventory: [
+            { MaNguyenLieu: 1, TenNguyenLieu: 'Hạt Cà Phê Arabica/Robusta', DonViTinh: 'gram', GiaVonBinhQuan: 350, SoLuongTon: 10000, MucTonToiThieu: 1000 },
+            { MaNguyenLieu: 2, TenNguyenLieu: 'Sữa Đặc Ngôi Sao', DonViTinh: 'ml', GiaVonBinhQuan: 45, SoLuongTon: 20000, MucTonToiThieu: 2000 },
+            { MaNguyenLieu: 3, TenNguyenLieu: 'Sữa Tươi Thanh Trùng', DonViTinh: 'ml', GiaVonBinhQuan: 35, SoLuongTon: 30000, MucTonToiThieu: 3000 },
+            { MaNguyenLieu: 7, TenNguyenLieu: 'Ly Nhựa 500ml + Nắp', DonViTinh: 'cái', GiaVonBinhQuan: 1200, SoLuongTon: 1000, MucTonToiThieu: 100 }
+        ],
+        customers: [
+            { HoTen: 'Khách Hàng VIP', SoDienThoai: '0988888888', DiemTichLuy: 500, TongChiTieu: 5000000, HangThanhVien: 'Gold' },
+            { HoTen: 'Nguyễn Văn Khách', SoDienThoai: '0912345678', DiemTichLuy: 50, TongChiTieu: 500000, HangThanhVien: 'Member' }
+        ],
+        kdsOrders: [
+            { MaDonHang: 501, MaDonHienThi: 'POS9821', SoThuTuGoiMon: 101, KenhBan: 'POS', HinhThucNhan: 'Dine_In', TenSanPhamLuuTru: 'Bạc Xỉu Đá', TenSize: 'M', SoLuong: 2, MucDuong: '100% Đường', MucDa: '100% Đá', SoLanLamLai: 0 }
+        ],
+        tables: [
+            { id: 1, name: 'Bàn 1', guests: '2 khách', busy: true },
+            { id: 2, name: 'Bàn 2', guests: '4 khách', busy: true },
+            { id: 3, name: 'Bàn 3', guests: 'Trống', busy: false },
+            { id: 4, name: 'Bàn 4', guests: 'Trống', busy: false },
+            { id: 5, name: 'Bàn 5', guests: '6 khách', busy: true },
+            { id: 6, name: 'Bàn 6', guests: 'Trống', busy: false }
+        ]
+    };
+
+    let branchesList = fallbackState.branches;
+    let activeShiftData = fallbackState.activeShift;
+    let posProducts = fallbackState.products;
+    let posPromos = fallbackState.promos;
+    let posCart = [];
+
+    async function safeFetch(url, options) {
+        try {
+            const res = await fetch(url, options);
+            const data = await res.json();
+            return data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (el) el.classList.add('active');
+        refreshAllData();
+    }
+
+    // KHI ĐỔI CHI NHÁNH TRÊN HEADER
+    function onBranchChange() {
+        currentBranchId = parseInt(document.getElementById('branchSelector').value) || 1;
+        const b = branchesList.find(x => x.MaChiNhanh === currentBranchId);
+        if (b) {
+            document.getElementById('currentBranchSubtitle').innerText = `Đang làm việc tại: ${b.TenChiNhanh} (${b.DiaChi})`;
+            document.querySelectorAll('.branch-name-label').forEach(el => el.innerText = b.TenChiNhanh);
+        }
+        refreshAllData();
+    }
+
+    // PHÂN QUYỀN CHẶT CHẼ THEO 5 VAI TRÒ (RBAC)
+    function onRoleChange(newRole) {
+        if (newRole === 'ADMIN' || newRole === 'MANAGER') {
+            const pin = prompt(`🔐 Nhập Mã PIN xác thực quyền [${newRole}] (Gợi ý: 9999 hoặc 8888):`, '9999');
+            if (pin !== '9999' && pin !== '8888') {
+                alert('❌ Sai Mã PIN Quản lý! Hệ thống giữ nguyên chế độ Nhân viên.');
+                document.getElementById('roleSelector').value = currentRole;
+                return;
+            }
+        }
+        currentRole = newRole;
+
+        // 1. Ẩn/Hiện Form Xếp Ca ở Luồng 1
+        const isManagerOrAdmin = ['ADMIN', 'MANAGER'].includes(currentRole);
+        document.getElementById('managerShiftPanel').style.display = isManagerOrAdmin ? 'block' : 'none';
+        document.getElementById('staffShiftLockNotice').style.display = isManagerOrAdmin ? 'none' : 'block';
+
+        // 2. Ẩn/Hiện các Tab theo đúng vai trò thực tế
+        const allowedTabs = {
+            'ADMIN': ['tab0', 'tab1', 'tab2', 'tab3', 'tab3d', 'tab4', 'tab6', 'tab7', 'tab8'],
+            'MANAGER': ['tab1', 'tab2', 'tab3', 'tab3d', 'tab7', 'tab8'],
+            'CASHIER': ['tab1', 'tab2', 'tab3'],
+            'BARISTA': ['tab1', 'tab3d'],
+            'CUSTOMER': ['tab4']
+        }[currentRole];
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            const tId = tab.getAttribute('data-tab');
+            tab.style.display = allowedTabs.includes(tId) ? 'flex' : 'none';
+        });
+
+        // Tự động chuyển về tab hợp lệ đầu tiên của vai trò đó
+        const firstTabId = allowedTabs[0];
+        const firstTabEl = document.querySelector(`.nav-tab[data-tab="${firstTabId}"]`);
+        switchTab(firstTabId, firstTabEl);
+    }
+
+    async function refreshAllData() {
+        await loadBranchesData();
+        renderTableMap();
+        await loadShiftStatus();
+        await loadHRData();
+        await loadPOSData();
+        await loadKDS();
+        await fetchMenuProducts();
+        renderPOSCart();
+    }
+
+    // ================= LUỒNG 0: QUẢN LÝ CHUỖI CHI NHÁNH =================
+    async function loadBranchesData() {
+        const apiData = await safeFetch(`${BASE_URL}/erp/branches`);
+        if (apiData && apiData.success) branchesList = apiData.branches;
+        else branchesList = fallbackState.branches;
+
+        // Cập nhật dropdown chọn chi nhánh
+        const branchOpts = branchesList.map(b => `<option value="${b.MaChiNhanh}" ${b.MaChiNhanh === currentBranchId ? 'selected' : ''}>${b.TenChiNhanh}</option>`).join('');
+        document.getElementById('branchSelector').innerHTML = branchOpts;
+        document.getElementById('onlBranchSelect').innerHTML = branchOpts;
+        document.getElementById('transferFromBranch').innerHTML = branchOpts;
+        document.getElementById('transferToBranch').innerHTML = branchesList.map(b => `<option value="${b.MaChiNhanh}" ${b.MaChiNhanh !== currentBranchId ? 'selected' : ''}>${b.TenChiNhanh}</option>`).join('');
+
+        const curB = branchesList.find(x => x.MaChiNhanh === currentBranchId) || branchesList[0];
+        if (curB) {
+            document.getElementById('currentBranchSubtitle').innerText = `Đang quản lý: ${curB.TenChiNhanh} • Trạng thái: ${curB.TrangThai.toUpperCase()}`;
+            document.querySelectorAll('.branch-name-label').forEach(el => el.innerText = curB.TenChiNhanh);
+        }
+
+        // Thống kê toàn chuỗi
+        const totalRev = branchesList.reduce((s, b) => s + (b.DoanhThuChiNhanh || 0), 0);
+        document.getElementById('chainOverviewStats').innerHTML = `
+            <div class="stat-card"><div><div class="stat-label">Tổng Quy Mô Chuỗi</div><div class="stat-val">${branchesList.length} Chi Nhánh</div></div><span class="badge bg-ok">Toàn quốc</span></div>
+            <div class="stat-card"><div><div class="stat-label">Tổng Doanh Thu Toàn Chuỗi</div><div class="stat-val">${totalRev.toLocaleString()}đ</div></div><span class="badge bg-ok">Thời gian thực</span></div>
+            <div class="stat-card"><div><div class="stat-label">Chi Nhánh Đang Chọn</div><div class="stat-val" style="font-size:17px;">${curB ? curB.TenChiNhanh : ''}</div></div><span class="badge bg-warn">Active</span></div>
+        `;
+
+        document.getElementById('tableBranches').innerHTML = branchesList.map(b => `
+            <tr>
+                <td><strong>#${b.MaChiNhanh}</strong></td>
+                <td><strong>${b.TenChiNhanh}</strong></td>
+                <td>${b.DiaChi}</td>
+                <td>${b.SoNhanVien || 4} NV</td>
+                <td style="color:var(--primary-green); font-weight:800;">${(b.DoanhThuChiNhanh || 0).toLocaleString()}đ</td>
+                <td><span class="badge ${b.TrangThai === 'open' ? 'bg-ok' : (b.TrangThai === 'overload' ? 'bg-warn' : 'bg-err')}">${b.TrangThai.toUpperCase()}</span></td>
+                <td>
+                    <button class="btn-green" style="padding:4px 8px; font-size:11px;" onclick="setBranchStatus(${b.MaChiNhanh}, 'open')">Mở cửa</button>
+                    <button class="btn-orange" style="padding:4px 8px; font-size:11px;" onclick="setBranchStatus(${b.MaChiNhanh}, 'overload')">Báo Quá tải</button>
+                    <button class="btn-red" style="padding:4px 8px; font-size:11px;" onclick="setBranchStatus(${b.MaChiNhanh}, 'closed')">Đóng cửa</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function createNewBranch() {
+        const TenChiNhanh = document.getElementById('newBranchName').value.trim();
+        const DiaChi = document.getElementById('newBranchAddr').value.trim();
+        const SoDienThoai = document.getElementById('newBranchPhone').value.trim();
+        if (!TenChiNhanh || !DiaChi) return alert('Vui lòng nhập tên và địa chỉ chi nhánh mới!');
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/branches`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'create', TenChiNhanh, DiaChi, SoDienThoai })
+        });
+        if (!apiRes || !apiRes.success) {
+            fallbackState.branches.push({ MaChiNhanh: fallbackState.branches.length + 1, TenChiNhanh, DiaChi, SoDienThoai, SoNhanVien: 0, DoanhThuChiNhanh: 0, TrangThai: 'open' });
+        }
+        alert(apiRes?.message || '🏢 Đã khai trương Chi nhánh mới thành công!');
+        document.getElementById('newBranchName').value = '';
+        document.getElementById('newBranchAddr').value = '';
+        refreshAllData();
+    }
+
+    async function setBranchStatus(MaChiNhanh, TrangThai) {
+        const apiRes = await safeFetch(`${BASE_URL}/erp/branches`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'status', MaChiNhanh, TrangThai })
+        });
+        const fb = fallbackState.branches.find(x => x.MaChiNhanh === MaChiNhanh);
+        if (fb) fb.TrangThai = TrangThai;
+        alert(apiRes?.message || `Đã đổi trạng thái chi nhánh #${MaChiNhanh} sang [${TrangThai}]!`);
+        refreshAllData();
+    }
+
+    // ================= LUỒNG 1: PHÂN CA, XIN ĐỔI CA & CHẤM CÔNG =================
+    async function loadHRData() {
+        const apiData = await safeFetch(`${BASE_URL}/erp/hr?branchId=${currentBranchId}`);
+        const data = (apiData && apiData.success) ? apiData : fallbackState;
+
+        const nvOptions = data.nhanVien.map(nv => `<option value="${nv.MaNhanVien}">${nv.HoTen} (${nv.TenVaiTro})</option>`).join('');
+        document.getElementById('hrNhanVien').innerHTML = nvOptions;
+        document.getElementById('ccNhanVien').innerHTML = nvOptions;
+
+        const isManager = ['ADMIN', 'MANAGER'].includes(currentRole);
+
+        document.getElementById('tablePhanCa').innerHTML = data.phanCa.map(pc => {
+            let actionBtn = '';
+            if (!isManager && pc.TrangThai === 'scheduled') {
+                actionBtn = `<button class="btn-orange" style="padding:4px 9px; font-size:11px;" onclick="requestLeaveShift(${pc.MaPhanCa})">✋ Xin đổi/nghỉ ca</button>`;
+            } else if (isManager && pc.TrangThai === 'Leave_Requested') {
+                actionBtn = `<button class="btn-green" style="padding:4px 9px; font-size:11px;" onclick="approveLeaveShift(${pc.MaPhanCa})">✅ Duyệt đơn</button>`;
+            } else {
+                actionBtn = `<span style="color:#94a3b8; font-size:12px;">Đã chốt lịch</span>`;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${pc.HoTen}</strong></td>
+                    <td>${pc.TenCa} (${pc.GioBatDau}-${pc.GioKetThuc})</td>
+                    <td>${pc.ViTriLamViec}</td>
+                    <td>
+                        <span class="badge ${pc.TrangThai === 'scheduled' ? 'bg-ok' : 'bg-warn'}">${pc.TrangThai}</span>
+                        ${pc.GhiChu ? `<div style="font-size:11px; color:#b45309; margin-top:3px;">📝 ${pc.GhiChu}</div>` : ''}
+                    </td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('tableChamCong').innerHTML = data.chamCong.map(cc => `
+            <tr>
+                <td><strong>${cc.HoTen}</strong></td>
+                <td>${cc.ThoiGianCheckIn ? new Date(cc.ThoiGianCheckIn).toLocaleTimeString('vi-VN') : '-'}</td>
+                <td>${cc.ThoiGianCheckOut ? new Date(cc.ThoiGianCheckOut).toLocaleTimeString('vi-VN') : '<span class="badge bg-warn">Đang trong ca</span>'}</td>
+                <td>${cc.PhuongThuc}</td>
+                <td><span class="badge bg-ok">Đúng giờ</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function assignShift() {
+        if (!['ADMIN', 'MANAGER'].includes(currentRole)) {
+            return alert('⛔ Lỗi phân quyền: Nhân viên không được phép tự xếp ca!');
+        }
+        const nvSelect = document.getElementById('hrNhanVien');
+        const MaNhanVien = nvSelect.value;
+        const HoTen = nvSelect.options[nvSelect.selectedIndex]?.text.split(' (')[0] || 'Nhân viên';
+        const MaCaMau = document.getElementById('hrCaMau').value;
+        const ViTriLamViec = document.getElementById('hrViTri').value;
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/hr`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'assign_shift', MaChiNhanh: currentBranchId, MaNhanVien, MaCaMau, ViTriLamViec, Role: currentRole })
+        });
+        if (!apiRes || !apiRes.success) {
+            fallbackState.phanCa.unshift({ MaPhanCa: Date.now(), MaChiNhanh: currentBranchId, HoTen, TenCa: MaCaMau === '1' ? 'Ca Sáng' : 'Ca Chiều', GioBatDau: '06:30', GioKetThuc: '14:30', ViTriLamViec, TrangThai: 'scheduled', GhiChu: '' });
+        }
+        alert(apiRes?.message || '✅ Quản lý đã xếp ca làm việc thành công!');
+        loadHRData();
+    }
+
+    async function requestLeaveShift(MaPhanCa) {
+        const LyDoXinNghi = prompt('Nhập lý do xin đổi ca / nghỉ phép để gửi Quản lý duyệt:', 'Bận lịch thi học kỳ tại trường');
+        if (!LyDoXinNghi) return;
+        const apiRes = await safeFetch(`${BASE_URL}/erp/hr`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'request_leave', MaPhanCa, LyDoXinNghi })
+        });
+        const pc = fallbackState.phanCa.find(x => x.MaPhanCa === MaPhanCa);
+        if (pc) { pc.TrangThai = 'Leave_Requested'; pc.GhiChu = LyDoXinNghi; }
+        alert(apiRes?.message || '📨 Đã gửi yêu cầu xin đổi ca lên Quản lý chi nhánh!');
+        loadHRData();
+    }
+
+    async function approveLeaveShift(MaPhanCa) {
+        const apiRes = await safeFetch(`${BASE_URL}/erp/hr`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'approve_leave', MaPhanCa })
+        });
+        const pc = fallbackState.phanCa.find(x => x.MaPhanCa === MaPhanCa);
+        if (pc) { pc.TrangThai = 'Absent (Đã duyệt)'; pc.GhiChu += ' (Quản lý đã duyệt)'; }
+        alert(apiRes?.message || '✅ Quản lý đã duyệt đơn xin đổi ca!');
+        loadHRData();
+    }
+
+    async function checkInOut(action) {
+        const nvSelect = document.getElementById('ccNhanVien');
+        const MaNhanVien = nvSelect.value;
+        const HoTen = nvSelect.options[nvSelect.selectedIndex]?.text.split(' (')[0] || 'Nhân viên';
+        const PhuongThuc = document.getElementById('ccPhuongThuc').value;
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/hr`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action, MaNhanVien, PhuongThuc })
+        });
+        if (!apiRes || !apiRes.success) {
+            if (action === 'checkin') fallbackState.chamCong.unshift({ HoTen, ThoiGianCheckIn: new Date(), ThoiGianCheckOut: null, PhuongThuc });
+            else if (fallbackState.chamCong[0]) fallbackState.chamCong[0].ThoiGianCheckOut = new Date();
+        }
+        alert(apiRes?.message || '✅ Đã ghi nhận chấm công!');
+        loadHRData();
+    }
+
+    // ================= LUỒNG 2 & 5: MỞ CA & ĐÓNG CA THEO CHI NHÁNH =================
+    async function loadShiftStatus() {
+        const apiData = await safeFetch(`${BASE_URL}/erp/shift?branchId=${currentBranchId}`);
+        const data = (apiData && apiData.success) ? apiData : fallbackState;
+        activeShiftData = data.activeShift;
+
+        const badge = document.getElementById('globalShiftBadge');
+        const box = document.getElementById('shiftSummaryBox');
+        if (activeShiftData) {
+            badge.className = 'shift-badge shift-open';
+            badge.innerText = `🟢 CA #${activeShiftData.MaPhienCa} ĐANG MỞ (${activeShiftData.TenThuNgan})`;
+            box.innerHTML = `
+                <div>📌 <strong>Phiên ca:</strong> #${activeShiftData.MaPhienCa} | <strong>Thu ngân:</strong> ${activeShiftData.TenThuNgan}</div>
+                <div>💵 <strong>Tiền đầu ca:</strong> ${activeShiftData.TienMatDauCa.toLocaleString()}đ | <strong>Doanh thu tiền mặt:</strong> +${activeShiftData.TongThuTienMat.toLocaleString()}đ</div>
+                <div>🔄 <strong>Thu nội bộ:</strong> +${activeShiftData.TongThuNoiBo.toLocaleString()}đ | <strong>Chi nội bộ:</strong> -${activeShiftData.TongChiNoiBo.toLocaleString()}đ</div>
+                <div style="font-size:16px; color:var(--primary-green); margin-top:6px;">💰 <strong>TIỀN MẶT DỰ KIẾN TRONG KÉT: ${activeShiftData.TienMatDuKien.toLocaleString()}đ</strong></div>
+            `;
+            document.getElementById('tienThucTeCuoiCa').value = activeShiftData.TienMatDuKien;
+        } else {
+            badge.className = 'shift-badge shift-closed';
+            badge.innerText = `🔴 CHƯA MỞ CA POS`;
+            box.innerHTML = `<span style="color:#dc2626; font-weight:bold;">Chi nhánh này chưa mở ca POS. Vui lòng nhập mã PIN bên trái để mở ca!</span>`;
+        }
+
+        document.getElementById('tableLichSuCa').innerHTML = (data.historyShifts || []).map(s => `
+            <tr>
+                <td><strong>#${s.MaPhienCa}</strong></td>
+                <td>${s.TenThuNgan}</td>
+                <td>${s.TienMatDauCa.toLocaleString()}đ</td>
+                <td style="color:var(--primary-green); font-weight:bold;">+${s.TongThuTienMat.toLocaleString()}đ</td>
+                <td>${s.TienMatThucTeCuoiCa !== null ? s.TienMatThucTeCuoiCa.toLocaleString() + 'đ' : '-'}</td>
+                <td>${s.TienChenhLech !== null ? s.TienChenhLech.toLocaleString() + 'đ' : '-'}</td>
+                <td><span class="badge ${s.TrangThai === 'open' ? 'bg-ok' : 'bg-warn'}">${s.TrangThai}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function openPOSShift() {
+        const MaPIN = document.getElementById('pinMoCa').value;
+        const TienMatDauCa = parseFloat(document.getElementById('tienDauCa').value) || 1000000;
+        const LyDoLechDauCa = document.getElementById('lyDoDauCa').value;
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/shift/open`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaChiNhanh: currentBranchId, MaPIN, TienMatDauCa, LyDoLechDauCa })
+        });
+        if (!apiRes || !apiRes.success) {
+            if (apiRes && apiRes.message) return alert(apiRes.message);
+            fallbackState.activeShift = { MaPhienCa: Math.floor(Math.random()*90)+105, MaChiNhanh: currentBranchId, TenThuNgan: 'Lê Thu Ngân', TienMatDauCa, TongThuTienMat: 0, TongHoanTienMat: 0, TongThuNoiBo: 0, TongChiNoiBo: 0, TienMatDuKien: TienMatDauCa, TrangThai: 'open' };
+        }
+        alert(apiRes?.message || '🎉 Mở ca bán hàng thành công!');
+        refreshAllData();
+    }
+
+    async function submitThuChi() {
+        if (!activeShiftData) return alert('⚠️ Vui lòng mở ca trước!');
+        const LoaiPhieu = document.getElementById('loaiThuChi').value;
+        const SoTien = parseFloat(document.getElementById('soTienThuChi').value);
+        const LyDo = document.getElementById('lyDoThuChi').value;
+        if (!SoTien || !LyDo) return alert('Vui lòng nhập số tiền và lý do!');
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/shift/cashflow`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaPhienCa: activeShiftData.MaPhienCa, LoaiPhieu, SoTien, LyDo })
+        });
+        alert(apiRes?.message || '✅ Đã lưu phiếu thu/chi nội bộ!');
+        loadShiftStatus();
+    }
+
+    async function closePOSShift() {
+        if (!activeShiftData) return alert('⚠️ Không có ca nào đang mở!');
+        const TienMatThucTeCuoiCa = parseFloat(document.getElementById('tienThucTeCuoiCa').value) || 0;
+        const LyDoChenhLechCuoiCa = document.getElementById('lyDoLechCuoiCa').value;
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/shift/close`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaPhienCa: activeShiftData.MaPhienCa, TienMatThucTeCuoiCa, LyDoChenhLechCuoiCa })
+        });
+        if (apiRes && !apiRes.success) return alert(apiRes.message);
+        if (!apiRes) fallbackState.activeShift = null;
+        alert(apiRes?.message || '🔒 Đã chốt ca và khóa sổ thành công!');
+        refreshAllData();
+    }
+
+    // ================= SƠ ĐỒ BÀN & POS =================
+    function renderTableMap() {
+        document.getElementById('tableMapGrid').innerHTML = fallbackState.tables.map(t => `
+            <div class="table-node ${t.busy ? 'table-busy' : 'table-free'} ${t.id === selectedTableId ? 'table-selected' : ''}" onclick="selectedTableId=${t.id}; renderTableMap();">
+                <div>🪑 ${t.name}</div>
+                <div style="font-size:11px; font-weight:500; margin-top:3px;">${t.busy ? '🟢 ' + t.guests : '⚪ Trống'}</div>
+            </div>
+        `).join('');
+        updateTableLabel();
+    }
+
+    function freeSelectedTable() {
+        const tb = fallbackState.tables.find(t => t.id === selectedTableId);
+        if (tb) { tb.busy = false; tb.guests = 'Trống'; }
+        renderTableMap();
+    }
+
+    function updateTableLabel() {
+        const hinhThuc = document.getElementById('posHinhThuc').value;
+        const tb = fallbackState.tables.find(t => t.id === selectedTableId);
+        document.getElementById('selectedTableLabel').innerText = hinhThuc === 'Dine_In' ? `${tb.name} - Tại chỗ` : `Mang đi (Take-away)`;
+    }
+
+    async function loadPOSData() {
+        const apiData = await safeFetch(`${BASE_URL}/erp/pos-init?branchId=${currentBranchId}`);
+        const data = (apiData && apiData.success) ? apiData : fallbackState;
+
+        posProducts = data.products;
+        posPromos = data.promos;
+        renderPOSMenuGrid();
+
+        document.getElementById('onlMon').innerHTML = posProducts.map(p => `<option value="${p.MaSanPham}">${p.TenSanPham} - ${p.GiaBan.toLocaleString()}đ</option>`).join('');
+        document.getElementById('posKhuyenMai').innerHTML = `<option value="0">-- Chọn Khuyến Mãi / Voucher --</option>` +
+            posPromos.map(km => `<option value="${km.MaKhuyenMai}">[${km.MaCode}] ${km.TenChuongTrinh}</option>`).join('');
+
+        document.getElementById('tableKhuyenMai').innerHTML = posPromos.map(km => `
+            <tr>
+                <td><strong style="color:var(--primary-green)">${km.MaCode}</strong></td>
+                <td>${km.TenChuongTrinh}</td>
+                <td>${km.LoaiKhuyenMai}</td>
+                <td><strong>${km.GiaTriGiam.toLocaleString()}</strong></td>
+                <td>${km.DonToiThieu.toLocaleString()}đ</td>
+            </tr>
+        `).join('');
+
+        const nlOpts = data.inventory.map(nl => `<option value="${nl.MaNguyenLieu}">${nl.TenNguyenLieu} (${nl.DonViTinh})</option>`).join('');
+        document.getElementById('khoNguyenLieu').innerHTML = nlOpts;
+        document.getElementById('transferMaterial').innerHTML = nlOpts;
+
+        document.getElementById('tableTonKho').innerHTML = data.inventory.map(nl => `
+            <tr>
+                <td><strong>${nl.TenNguyenLieu}</strong></td>
+                <td>${nl.DonViTinh}</td>
+                <td>${nl.GiaVonBinhQuan.toLocaleString()}đ</td>
+                <td style="font-weight:800; color:var(--primary-dark);">${nl.SoLuongTon.toLocaleString()} ${nl.DonViTinh}</td>
+                <td><span class="badge ${nl.SoLuongTon <= nl.MucTonToiThieu ? 'bg-err' : 'bg-ok'}">${nl.SoLuongTon <= nl.MucTonToiThieu ? 'Sắp hết' : 'Đủ dùng'}</span></td>
+            </tr>
+        `).join('');
+
+        document.getElementById('tableKhachHang').innerHTML = (data.customers || []).map(kh => `
+            <tr>
+                <td><strong>${kh.HoTen}</strong></td>
+                <td>${kh.SoDienThoai}</td>
+                <td style="color:var(--primary-green); font-weight:bold;">${kh.DiemTichLuy} điểm</td>
+                <td>${kh.TongChiTieu.toLocaleString()}đ</td>
+                <td><span class="badge bg-ok">${kh.HangThanhVien}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function filterPOSCategory(cat, el) {
+        currentCatFilter = cat;
+        document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderPOSMenuGrid();
+    }
+
+    function renderPOSMenuGrid() {
+        const list = currentCatFilter === 'ALL' ? posProducts : posProducts.filter(p => (p.TenDanhMuc || '').includes(currentCatFilter));
+        document.getElementById('posMenuGrid').innerHTML = list.map(p => `
+            <div class="menu-item" onclick="addToPOSCart(${p.MaSanPham})">
+                <div>
+                    <h4>☕ ${p.TenSanPham}</h4>
+                    <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">${p.TenDanhMuc || 'Menu'}</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="price">${p.GiaBan.toLocaleString()}đ</span>
+                    <span class="plus-btn">+</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addToPOSCart(maSP) {
+        const sp = posProducts.find(p => p.MaSanPham === maSP);
+        if (!sp) return;
+        const sizeEl = document.getElementById('posSize');
+        const TenSize = sizeEl.value;
+        const extra = parseFloat(sizeEl.options[sizeEl.selectedIndex].getAttribute('data-extra'));
+        const MucDuong = document.getElementById('posDuong').value;
+        const MucDa = document.getElementById('posDa').value;
+        const DonGia = sp.GiaBan + extra;
+
+        const existing = posCart.find(i => i.MaSanPham === maSP && i.TenSize === TenSize && i.MucDuong === MucDuong && i.MucDa === MucDa);
+        if (existing) existing.SoLuong += 1;
+        else posCart.push({ MaSanPham: sp.MaSanPham, TenSanPham: sp.TenSanPham, TenSize, MucDuong, MucDa, SoLuong: 1, DonGia });
+        renderPOSCart();
+    }
+
+    function renderPOSCart() {
+        const tbody = document.getElementById('posCartBody');
+        let subTotal = 0;
+        tbody.innerHTML = posCart.map((item, idx) => {
+            const lineTotal = item.DonGia * item.SoLuong;
+            subTotal += lineTotal;
+            return `
+                <tr>
+                    <td><strong>${item.TenSanPham}</strong> (${item.TenSize})</td>
+                    <td style="font-size:11.5px; color:var(--text-muted);">${item.MucDuong}, ${item.MucDa}</td>
+                    <td><strong>x${item.SoLuong}</strong></td>
+                    <td style="color:var(--primary-green); font-weight:bold;">${lineTotal.toLocaleString()}đ</td>
+                    <td><button class="btn-red" style="padding:3px 8px;" onclick="posCart.splice(${idx},1); renderPOSCart();">X</button></td>
+                </tr>
+            `;
+        }).join('');
+
+        let discount = 0;
+        const kmId = parseInt(document.getElementById('posKhuyenMai').value);
+        const km = posPromos.find(p => p.MaKhuyenMai === kmId);
+        if (km && subTotal >= km.DonToiThieu) {
+            discount = km.LoaiKhuyenMai === 'Discount_Percent' ? (subTotal * km.GiaTriGiam / 100) : km.GiaTriGiam;
+        }
+
+        const finalTotal = Math.max(0, subTotal - discount);
+        document.getElementById('posSubTotal').innerText = subTotal.toLocaleString() + 'đ';
+        document.getElementById('posDiscount').innerText = '-' + discount.toLocaleString() + 'đ';
+        document.getElementById('posFinalTotal').innerText = finalTotal.toLocaleString() + 'đ';
+    }
+
+    async function checkoutOrder(kenh) {
+        if (kenh === 'POS' && !activeShiftData) return alert('⚠️ Thu ngân chưa Mở Ca cho chi nhánh này! Vui lòng sang Tab 2 mở ca trước.');
+        if (posCart.length === 0) return alert('Giỏ hàng đang trống!');
+
+        const subTotal = posCart.reduce((s, i) => s + i.DonGia * i.SoLuong, 0);
+        const discount = parseFloat(document.getElementById('posDiscount').innerText.replace(/[^\d]/g, '')) || 0;
+        const finalTotal = Math.max(0, subTotal - discount);
+
+        const payload = {
+            MaChiNhanh: currentBranchId,
+            MaPhienCa: activeShiftData ? activeShiftData.MaPhienCa : null,
+            KenhBan: kenh,
+            HinhThucNhan: document.getElementById('posHinhThuc').value,
+            SoDienThoaiKhach: document.getElementById('posSDTKhach').value.trim(),
+            TienGiamGia: discount,
+            TongTienHang: subTotal,
+            TongPhaiTra: finalTotal,
+            PhuongThucThanhToan: document.getElementById('posPhuongThuc').value,
+            TienKhachDua: parseFloat(document.getElementById('posTienKhachDua').value) || finalTotal,
+            Items: posCart
+        };
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/orders`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        const tb = fallbackState.tables.find(t => t.id === selectedTableId);
+        if (tb && payload.HinhThucNhan === 'Dine_In') { tb.busy = true; tb.guests = 'Đang phục vụ'; }
+
+        alert(apiRes?.message || '🎉 Thanh toán thành công và đã đẩy xuống màn hình KDS!');
+        posCart = [];
+        renderPOSCart();
+        refreshAllData();
+    }
+
+    // ================= LUỒNG 4: KHÁCH ĐẶT ONLINE =================
+    async function orderOnlineQuick() {
+        const targetBranch = parseInt(document.getElementById('onlBranchSelect').value) || currentBranchId;
+        const maSP = parseInt(document.getElementById('onlMon').value);
+        const sl = parseInt(document.getElementById('onlSoLuong').value) || 1;
+        const sp = posProducts.find(p => p.MaSanPham === maSP);
+        if (!sp) return;
+
+        const tong = sp.GiaBan * sl;
+        const payload = {
+            MaChiNhanh: targetBranch,
+            MaPhienCa: activeShiftData ? activeShiftData.MaPhienCa : null,
+            KenhBan: 'APP',
+            HinhThucNhan: document.getElementById('onlHinhThuc').value,
+            SoDienThoaiKhach: document.getElementById('onlSDT').value.trim(),
+            DiaChiGiaoHang: document.getElementById('onlDiaChi').value,
+            TongTienHang: tong,
+            TongPhaiTra: tong,
+            PhuongThucThanhToan: 'VIETQR',
+            Items: [{ MaSanPham: sp.MaSanPham, TenSanPham: sp.TenSanPham, TenSize: 'M', SoLuong: sl, DonGia: sp.GiaBan, MucDuong: '100% Đường', MucDa: '100% Đá' }]
+        };
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/orders`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        alert(apiRes?.message || '🚀 Đặt đơn Online thành công!');
+        refreshAllData();
+    }
+
+    // ================= LUỒNG 3D: KDS PHA CHẾ =================
+    async function loadKDS() {
+        const apiData = await safeFetch(`${BASE_URL}/erp/kds?branchId=${currentBranchId}`);
+        const rows = (apiData && apiData.success) ? apiData.data : fallbackState.kdsOrders;
+        const container = document.getElementById('kdsContainer');
+
+        if (!rows || rows.length === 0) {
+            container.innerHTML = `<div class="tip-box">🎉 Hàng đợi pha chế tại chi nhánh này đang trống!</div>`;
+            return;
+        }
+
+        const grouped = {};
+        rows.forEach(row => {
+            if (!grouped[row.MaDonHang]) grouped[row.MaDonHang] = { info: row, items: [] };
+            grouped[row.MaDonHang].items.push(row);
+        });
+
+        container.innerHTML = Object.values(grouped).map(order => `
+            <div class="kds-card">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:8px;">
+                    <strong style="font-size:16px; color:var(--primary-dark);">🔔 SỐ GỌI: #${order.info.SoThuTuGoiMon}</strong>
+                    <span class="badge bg-ok">${order.info.KenhBan}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Mã đơn: <strong>${order.info.MaDonHienThi}</strong></div>
+                ${order.items.map(i => `
+                    <div style="padding:6px 0; border-bottom:1px dashed #e2e8f0;">
+                        <strong>${i.SoLuong}x ${i.TenSanPhamLuuTru} (${i.TenSize})</strong>
+                        <div style="font-size:12px; color:var(--primary-green);">${i.MucDuong} • ${i.MucDa} ${i.SoLanLamLai > 0 ? `<span class="badge bg-err">Làm lại lần ${i.SoLanLamLai}</span>` : ''}</div>
+                    </div>
+                `).join('')}
+                <div class="form-row" style="margin-top:12px;">
+                    <button class="btn-green" onclick="kdsAction(${order.info.MaDonHang}, 'complete_order')">✅ Hoàn Tất</button>
+                    <button class="btn-orange" onclick="kdsAction(${order.info.MaDonHang}, 'remake_item')">🔄 Làm Lại</button>
+                </div>
+                <button class="btn-red" style="width:100%; margin-top:6px;" onclick="kdsCancel(${order.info.MaDonHang})">❌ Hủy & Hoàn Tiền (PIN Quản Lý)</button>
+            </div>
+        `).join('');
+    }
+
+    async function kdsAction(MaDonHang, Action) {
+        const apiRes = await safeFetch(`${BASE_URL}/erp/kds/update`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaDonHang, Action })
+        });
+        alert(apiRes?.message || 'Đã cập nhật KDS!');
+        refreshAllData();
+    }
+
+    async function kdsCancel(MaDonHang) {
+        const MaPINQuanLy = prompt('Nhập Mã PIN Quản Lý để duyệt Hủy & Hoàn Tiền (9999 hoặc 8888):', '9999');
+        if (!MaPINQuanLy) return;
+        const LyDo = prompt('Nhập lý do hủy đơn:', 'Khách yêu cầu hủy món');
+        const apiRes = await safeFetch(`${BASE_URL}/erp/kds/update`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaDonHang, Action: 'cancel_refund', MaPINQuanLy, LyDo })
+        });
+        alert(apiRes?.message || 'Đã xử lý hủy đơn!');
+        refreshAllData();
+    }
+
+    // ================= LUỒNG 6: MENU =================
+    async function fetchMenuProducts() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const [sortBy, sortType] = document.getElementById('sortInput').value.split('-');
+        const apiData = await safeFetch(`${BASE_URL}/products?page=1&limit=30&search=${encodeURIComponent(search)}&sortBy=${sortBy}&sortType=${sortType}`);
+        const list = (apiData && apiData.success) ? apiData.data : fallbackState.products;
+
+        document.getElementById('product-list').innerHTML = list.map(p => `
+            <tr>
+                <td><strong>#${p.MaSanPham}</strong></td>
+                <td><strong>${p.TenSanPham}</strong></td>
+                <td>${p.TenDanhMuc || 'Danh mục #' + p.MaDanhMuc}</td>
+                <td><span class="badge bg-warn">${p.TramPhaChe || 'Tea_Smoothie_Bar'}</span></td>
+                <td style="color:var(--primary-green); font-weight:800;">${p.GiaBan.toLocaleString('vi-VN')}đ</td>
+                <td><span class="badge bg-ok">Đang bán</span></td>
+                <td><button class="btn-red" style="padding:5px 10px;" onclick="deleteMenuProduct(${p.MaSanPham})">Ẩn / Ngừng bán</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function addMenuProduct(e) {
+        e.preventDefault();
+        const MaDanhMuc = parseInt(document.getElementById('addMaDanhMuc').value);
+        const TenSanPham = document.getElementById('addTen').value.trim();
+        const GiaBan = parseFloat(document.getElementById('addGia').value);
+        const apiRes = await safeFetch(`${BASE_URL}/products`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaDanhMuc, TenSanPham, GiaBan })
+        });
+        alert(apiRes?.message || '✅ Đã thêm món mới vào Menu toàn chuỗi!');
+        e.target.reset();
+        refreshAllData();
+    }
+
+    async function deleteMenuProduct(id) {
+        if (!confirm('Chuyển món này sang trạng thái Tạm ngưng (Xóa mềm)?')) return;
+        await safeFetch(`${BASE_URL}/products/${id}`, { method: 'DELETE' });
+        refreshAllData();
+    }
+
+    // ================= LUỒNG 7: NHẬP KHO & CHUYỂN KHO LIÊN CHI NHÁNH =================
+    async function submitImportInventory() {
+        const MaNguyenLieu = parseInt(document.getElementById('khoNguyenLieu').value);
+        const SoLuongNhap = parseFloat(document.getElementById('khoSoLuong').value);
+        const DonGiaNhap = parseFloat(document.getElementById('khoDonGia').value);
+        const apiRes = await safeFetch(`${BASE_URL}/erp/inventory/import`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaChiNhanh: currentBranchId, MaNguyenLieu, SoLuongNhap, DonGiaNhap })
+        });
+        alert(apiRes?.message || '📦 Đã nhập kho thành công!');
+        loadPOSData();
+    }
+
+    async function transferStockBetweenBranches() {
+        const TuChiNhanh = parseInt(document.getElementById('transferFromBranch').value);
+        const DenChiNhanh = parseInt(document.getElementById('transferToBranch').value);
+        const MaNguyenLieu = parseInt(document.getElementById('transferMaterial').value);
+        const SoLuongNhap = parseFloat(document.getElementById('transferQty').value);
+        if (TuChiNhanh === DenChiNhanh) return alert('⚠️ Chi nhánh xuất và Chi nhánh nhận phải khác nhau!');
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/inventory/import`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ Action: 'transfer', TuChiNhanh, DenChiNhanh, MaNguyenLieu, SoLuongNhap })
+        });
+        alert(apiRes?.message || '🚚 Đã điều chuyển nguyên liệu giữa 2 chi nhánh thành công!');
+        loadPOSData();
+    }
+
+    // ================= LUỒNG 8: KHUYẾN MÃI =================
+    async function createPromo() {
+        const MaCode = document.getElementById('kmCode').value.trim().toUpperCase();
+        const TenChuongTrinh = document.getElementById('kmTen').value.trim();
+        const LoaiKhuyenMai = document.getElementById('kmLoai').value;
+        const GiaTriGiam = parseFloat(document.getElementById('kmGiaTri').value);
+        const DonToiThieu = parseFloat(document.getElementById('kmToiThieu').value) || 0;
+        if (!MaCode || !TenChuongTrinh || !GiaTriGiam) return alert('Vui lòng điền đủ thông tin!');
+
+        const apiRes = await safeFetch(`${BASE_URL}/erp/promotions`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ MaCode, TenChuongTrinh, LoaiKhuyenMai, GiaTriGiam, DonToiThieu })
+        });
+        alert(apiRes?.message || '🎁 Đã kích hoạt chương trình khuyến mãi toàn chuỗi!');
+        loadPOSData();
+    }
+
+    refreshAllData();
+</script>
+</body>
+</html>

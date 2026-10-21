@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.7z
+.vs/
+*.log
+.DS_Store
